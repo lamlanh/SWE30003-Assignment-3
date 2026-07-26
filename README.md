@@ -1,5 +1,4 @@
 # SWE30003-Assignment-3
-
 SmartFM/
 │
 ├── main.py                   ← entry point, runs the app
