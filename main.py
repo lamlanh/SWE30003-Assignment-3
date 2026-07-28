@@ -1,36 +1,3 @@
-"""
-=============================================================================
-SmartFM - Smart Fleet Management System
-=============================================================================
-Subject:        SWE30003 - Software Architectures and Design
-Assignment:     3 - Object Design Implementation and Reflection
-Prepared for:   ABC-Trans Vietnam
-Prepared by:    Swinsoft Consulting
-Semester:       May, 2026
-
-Description:
-    Main entry point for the SmartFM application.
-    This module initialises the SmartFMSystem (bootstrap controller)
-    and launches the main menu user interface.
-
-    Coding Standard: PEP 8 - Style Guide for Python Code
-    Reference: G. van Rossum, B. Warsaw, and N. Coghlan, "PEP 8 - Style
-    Guide for Python Code," Python Software Foundation, 2001.
-    Available: https://peps.python.org/pep-0008/
-
-Business Areas Implemented:
-    1. Customer Account Registration and Login
-    2. Browse and Place a Shipment Order
-    3. Vehicle and Driver Management (Fleet)
-    4. Assign Vehicle and Driver to Order
-
-Platform:
-    - Language : Python 3.10+
-    - UI       : Text-based (terminal)
-    - Storage  : JSON files (data/ folder)
-=============================================================================
-"""
-
 import sys
 import os
 
