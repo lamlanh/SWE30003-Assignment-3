@@ -13,8 +13,8 @@ for subfolder in ("system", "managers", "services", "models", "storage", "ui"):
 # ---------------------------------------------------------------------------
 # Local imports
 # ---------------------------------------------------------------------------
-from system.smartfm_system import SmartFMSystem
-from ui.main_menu import MainMenu
+from System.smartfm_system import SmartFMSystem
+from UI.main_menu import MainMenu
 
 
 # ---------------------------------------------------------------------------

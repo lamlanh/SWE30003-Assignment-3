@@ -1,9 +1,9 @@
-from manager.account_manager import AccountManager
-from manager.order_manager import OrderManager
-from manager.fleet_manager import FleetManager
-from service.authentication_manager import AuthenticationManager, ROLE_STAFF, ROLE_ADMIN
-from service.notification_service import NotificationService
-from models.customer import Customer
+from Manager.account_manager import AccountManager
+from Manager.order_manager import OrderManager
+from Manager.fleet_manager import FleetManager
+from Service.authentication_manager import AuthenticationManager, ROLE_STAFF, ROLE_ADMIN
+from Service.notification_service import NotificationService
+from Models.customer import Customer
 
 
 # ---------------------------------------------------------------------------

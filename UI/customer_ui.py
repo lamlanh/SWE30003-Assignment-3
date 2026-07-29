@@ -7,7 +7,7 @@ for subfolder in ("managers", "services", "models"):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from service.authentication_manager import ROLE_CUSTOMER, ROLE_STAFF, ROLE_ADMIN
+from Service.authentication_manager import ROLE_CUSTOMER, ROLE_STAFF, ROLE_ADMIN
 
 DIVIDER = "=" * 60
 THIN    = "-" * 60

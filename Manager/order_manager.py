@@ -7,16 +7,16 @@ for subfolder in ("models", "storage", "services", "managers"):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from models.order import (
+from Models.order import (
     Order,
     STATUS_PENDING, STATUS_CONFIRMED,
     STATUS_IN_TRANSIT, STATUS_DELIVERED, STATUS_CANCELLED
 )
-from models.shipment import Shipment
-from models.invoice import Invoice, STATUS_UNPAID
-from storage.file_storage import FileStorage
-from manager.fleet_manager import FleetManager
-from service.notification_service import NotificationService
+from Models.shipment import Shipment
+from Models.invoice import Invoice, STATUS_UNPAID
+from Storage.file_storage import FileStorage
+from Manager.fleet_manager import FleetManager
+from Service.notification_service import NotificationService
 
 
 class OrderManager:

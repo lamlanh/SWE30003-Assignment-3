@@ -7,9 +7,9 @@ for subfolder in ("ui", "services"):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from ui.customer_ui import CustomerUI
-from ui.order_ui    import OrderUI
-from ui.fleet_ui    import FleetUI
+from UI.customer_ui import CustomerUI
+from UI.order_ui    import OrderUI
+from UI.fleet_ui    import FleetUI
 
 
 DIVIDER = "=" * 60

@@ -8,9 +8,9 @@ for subfolder in ("models", "storage", "services"):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from models.customer import Customer
-from storage.file_storage import FileStorage
-from service.authentication_manager import AuthenticationManager
+from Models.customer import Customer
+from Storage.file_storage import FileStorage
+from Service.authentication_manager import AuthenticationManager
 
 
 class AccountManager:

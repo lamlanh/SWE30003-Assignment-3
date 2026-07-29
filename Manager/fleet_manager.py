@@ -7,10 +7,10 @@ for subfolder in ("models", "storage"):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from models.vehicle import Vehicle, STATUS_AVAILABLE, STATUS_ASSIGNED, STATUS_MAINTENANCE
-from models.driver import Driver, STATUS_AVAILABLE as DRV_AVAILABLE, STATUS_ASSIGNED as DRV_ASSIGNED, STATUS_ON_LEAVE
-from models.branch import Branch
-from storage.file_storage import FileStorage
+from Models.vehicle import Vehicle, STATUS_AVAILABLE, STATUS_ASSIGNED, STATUS_MAINTENANCE
+from Models.driver import Driver, STATUS_AVAILABLE as DRV_AVAILABLE, STATUS_ASSIGNED as DRV_ASSIGNED, STATUS_ON_LEAVE
+from Models.branch import Branch
+from Storage.file_storage import FileStorage
 
 
 class FleetManager:
