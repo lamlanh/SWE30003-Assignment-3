@@ -7,7 +7,7 @@ for subfolder in ("managers", "services", "models"):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from services.authentication_manager import ROLE_CUSTOMER
+from service.authentication_manager import ROLE_CUSTOMER, ROLE_STAFF, ROLE_ADMIN
 
 DIVIDER = "=" * 60
 THIN    = "-" * 60
@@ -143,13 +143,17 @@ class CustomerUI:
             input("\n  Press Enter to continue...")
             return
 
+        # Detect role — staff and admin accounts have a _role attribute
+        # set during seeding; regular customers default to ROLE_CUSTOMER
+        role = getattr(customer, "_role", ROLE_CUSTOMER)
+
         # Attempt login via AuthenticationManager
         success, message = self._auth.login(
             username       = username,
             plain_password = password,
             stored_hash    = customer.password_hash,
             user_id        = customer.customer_id,
-            role           = ROLE_CUSTOMER
+            role           = role
         )
 
         if success:

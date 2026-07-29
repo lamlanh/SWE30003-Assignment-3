@@ -15,8 +15,8 @@ from models.order import (
 from models.shipment import Shipment
 from models.invoice import Invoice, STATUS_UNPAID
 from storage.file_storage import FileStorage
-from managers.fleet_manager import FleetManager
-from services.notification_service import NotificationService
+from manager.fleet_manager import FleetManager
+from service.notification_service import NotificationService
 
 
 class OrderManager:

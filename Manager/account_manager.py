@@ -10,7 +10,7 @@ for subfolder in ("models", "storage", "services"):
 
 from models.customer import Customer
 from storage.file_storage import FileStorage
-from services.authentication_manager import AuthenticationManager
+from service.authentication_manager import AuthenticationManager
 
 
 class AccountManager:

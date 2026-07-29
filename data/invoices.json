@@ -1,0 +1,11 @@
+{
+    "INV-001": {
+        "invoice_id": "INV-001",
+        "order_id": "ORD-001",
+        "customer_id": "CUST-001",
+        "amount_vnd": 10000000.0,
+        "status": "UNPAID",
+        "date_issued": "2026-07-29",
+        "date_paid": null
+    }
+}

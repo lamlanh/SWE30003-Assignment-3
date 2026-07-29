@@ -1,0 +1,17 @@
+{
+    "ORD-001": {
+        "order_id": "ORD-001",
+        "customer_id": "CUST-001",
+        "cargo_description": "Small",
+        "cargo_weight_kg": 1000.0,
+        "pickup_address": "Hang Bac",
+        "delivery_address": "My Dinh",
+        "preferred_date": "2026-07-31",
+        "status": "PENDING",
+        "vehicle_id": null,
+        "driver_id": null,
+        "invoice_id": "INV-001",
+        "created_date": "2026-07-29",
+        "notes": ""
+    }
+}
