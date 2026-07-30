@@ -51,8 +51,12 @@ SmartFM/
 │           ├── dashboard.html
 │           ├── place_order.html
 │           ├── my_orders.html
-│           ├── fleet.html
-│           └── assign_order.html
+│           ├── staff_dashboard.html
+│           ├── pending_orders.html
+│           ├── assign_order.html
+│           ├── fleet_vehicles.html
+│           ├── fleet_drivers.html
+│           └── add_vehicle.html
 │   
 │
 ├── storage/
