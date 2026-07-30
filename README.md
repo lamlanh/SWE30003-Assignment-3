@@ -1,42 +1,83 @@
+# smartfm
+
+A fleet management and order processing system for a smart freight management application.
+
+## Project Structure
+
 smartfm/
 │
-├── app.py
+├── `app.py`
+│   - Main application entry point.
 │
-├── managers/
-│   ├── smartfm_system.py
-│   ├── account_manager.py
-│   ├── order_manager.py
-│   ├── shipment_manager.py
-│   ├── fleet_manager.py
-│   └── payment_processor.py
+├── `managers/`
+│   - Business logic and orchestration modules.
+│   ├── `smartfm_system.py` - Core system controller.
+│   ├── `account_manager.py` - Customer account management.
+│   ├── `order_manager.py` - Order creation and tracking.
+│   ├── `shipment_manager.py` - Shipment scheduling and status updates.
+│   ├── `fleet_manager.py` - Vehicle and driver coordination.
+│   └── `payment_processor.py` - Invoice and payment handling.
 │
-├── models/
-│   ├── customer.py
-│   ├── order.py
-│   ├── shipment.py
-│   ├── invoice.py
-│   ├── receipt.py
-│   ├── vehicle.py
-│   └── driver.py
+├── `models/`
+│   - Domain data models.
+│   ├── `customer.py` - Customer profile and account data.
+│   ├── `order.py` - Order data structure.
+│   ├── `shipment.py` - Shipment details and status.
+│   ├── `invoice.py` - Billing and invoice records.
+│   ├── `receipt.py` - Payment receipts and confirmation.
+│   ├── `vehicle.py` - Vehicle records and availability.
+│   └── `driver.py` - Driver profiles and assignments.
 │
-├── ui/
-│   ├── customer_page.py
-│   ├── order_page.py
-│   ├── fleet_page.py
-│   ├── payment_page.py
-│   └── inspector_page.py
+├── `ui/`
+│   - User interface screens or CLI views.
+│   ├── `customer_page.py` - Customer interaction page.
+│   ├── `order_page.py` - Order placement and review.
+│   ├── `fleet_page.py` - Fleet monitoring and dispatch.
+│   ├── `payment_page.py` - Payment processing page.
+│   └── `inspector_page.py` - Inspection and audit view.
 │
-├── utils/
-│   ├── validator.py
-│   ├── json_helper.py
-│   └── id_generator.py
+├── `utils/`
+│   - Shared helper utilities.
+│   ├── `validator.py` - Input validation functions.
+│   ├── `json_helper.py` - JSON load/save helpers.
+│   └── `id_generator.py` - Unique ID generation.
 │
-├── data/
-│   ├── customers.json
-│   ├── orders.json
-│   ├── shipments.json
-│   ├── invoices.json
-│   ├── vehicles.json
-│   └── drivers.json
+├── `data/`
+│   - Persistent test or runtime data stores.
+│   ├── `customers.json`
+│   ├── `orders.json`
+│   ├── `shipments.json`
+│   ├── `invoices.json`
+│   ├── `vehicles.json`
+│   └── `drivers.json`
 │
-└── requirements.txt
+└── `requirements.txt`
+
+## Getting Started
+
+1. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+2. Run the application:
+
+```bash
+python app.py
+```
+
+## Features
+
+- Customer account management
+- Order creation and tracking
+- Shipment scheduling and status updates
+- Fleet management with vehicles and drivers
+- Invoice generation and payment processing
+- JSON-backed data persistence for demo/test data
+
+## Notes
+
+- Update `data/` JSON files to add sample customers, orders, shipments, vehicles, and drivers.
+- Use the `managers/` folder to customize business rules.
+- Use the `ui/` folder to adapt the interface for CLI or GUI frameworks.
