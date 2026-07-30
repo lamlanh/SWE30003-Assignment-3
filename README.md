@@ -5,7 +5,7 @@ SmartFM code
 >>>>>>> 79862ebffcee8716619d8a74f0a7bc70397356e0
 SmartFM/
 │
-├── main.py                   ← entry point, runs the app
+├── manage.py                 ← Django entry point (replaces main.py)
 │
 ├── system/
 │   ├── __init__.py
@@ -32,12 +32,28 @@ SmartFM/
 │   ├── invoice.py            ← Invoice data-holder
 │   └── branch.py             ← Branch data-holder
 │
-├── ui/
+├── smartfm_project/          ← Django project settings
 │   ├── __init__.py
-│   ├── main_menu.py          ← main menu UI
-│   ├── customer_ui.py        ← customer registration/login screens
-│   ├── order_ui.py           ← place order screens
-│   └── fleet_ui.py           ← vehicle/driver management screens
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+│
+├── smartfm_app/               ← Django app (replaces ui/ folder)
+│   ├── __init__.py
+│   ├── views.py               ← all page logic
+│   ├── urls.py                ← URL routing
+│   ├── forms.py               ← form definitions
+│   └── templates/
+│       └── smartfm_app/
+│           ├── base.html      ← dark mode layout
+│           ├── login.html
+│           ├── register.html
+│           ├── dashboard.html
+│           ├── place_order.html
+│           ├── my_orders.html
+│           ├── fleet.html
+│           └── assign_order.html
+│   
 │
 ├── storage/
 │   ├── __init__.py
