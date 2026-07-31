@@ -1,0 +1,20 @@
+# =============================================================================
+# SmartFM - Smart Fleet Management System
+# Requirements File
+# =============================================================================
+# Install all dependencies by running:
+#     pip install -r requirements.txt
+#
+# Python version required: 3.10 or higher
+# =============================================================================
+
+# Streamlit — web UI framework for the SmartFM application
+streamlit
+
+# All other packages used in this project are part of Python's
+# standard library and do not need to be installed separately:
+#   - json      (JSON file reading and writing)
+#   - hashlib   (password hashing in AuthenticationManager)
+#   - datetime  (date validation and formatting)
+#   - os        (file path handling)
+#   - sys       (Python path configuration)
