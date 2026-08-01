@@ -1,26 +1,3 @@
-"""
-=============================================================================
-SmartFM - Smart Fleet Management System
-=============================================================================
-Module:         managers/shipment_manager.py
-Class:          ShipmentManager
-CRC Card:       CRC 2 - ShipmentManager (Assignment 2)
-Member:         Member 3 - Fleet & Logistics
-
-Description:    Manages shipment records and tracking milestone updates
-                once a vehicle and driver have been assigned to an order.
-
-                Core Focus: Updating shipment tracking milestones and
-                ensuring accurate status transitions throughout the
-                delivery lifecycle.
-
-Design Pattern: Singleton — only one instance exists at runtime.
-                Created by SmartFMSystem during bootstrap.
-
-Coding Standard: PEP 8 - https://peps.python.org/pep-0008/
-=============================================================================
-"""
-
 import sys
 import os
 from datetime import datetime
