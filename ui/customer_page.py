@@ -2,7 +2,7 @@ import streamlit as st
 
 def render_page():
     # Set the title of the page
-    st.title("👤 Customer Account Management")
+    st.title("Customer Account Management")
     
     # Grab the AccountManager instance from the system session state
     account_manager = st.session_state.system.account_manager
