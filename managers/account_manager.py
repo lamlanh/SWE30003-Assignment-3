@@ -18,11 +18,6 @@ class AccountManager:
         data = [cust.to_dict() for cust in self.customers]                                                       
         save_data('customers.json', data)                                                                        
                                                                                                                     
-    # =========================================================================                                  
-    # STUBS FOR OTHER TEAM MEMBERS TO IMPLEMENT LATER                                                                           
-    # You can call these right now without the app crashing                                              
-    # =========================================================================                                  
-
     def register_customer(self, username, password, full_name, email, phone, address):
         """Registers a new customer after validating the username."""                                            
                                                                                                                      
