@@ -24,29 +24,71 @@ class AccountManager:
     # =========================================================================                                  
 
     def register_customer(self, username, password, full_name, email, phone, address):
-        """
-        TODO: 
-        1. Check if the username already exists (return an error message if so).
-        2. Hash the password (using the hashlib library).
-        3. Generate a new ID using generate_new_id().
-        4. Create a new Customer object.
-        5. Add it to self.customers and call self.save_customers().
-        """
-        pass
-
+        """Registers a new customer after validating the username."""                                            
+                                                                                                                     
+        # 1. Check if username already exists                                                                    
+        for existing_cust in self.customers:                                                                     
+            if existing_cust.username == username:                                                               
+                return False, "Username already exists. Please choose another."                                  
+                                                                                                                    
+        # 2. Hash the password for security                                                                      
+        # We use SHA-256 to scramble the password so we never store plain text                                   
+        password_hash = hashlib.sha256(password.encode()).hexdigest()                                            
+                                                                                                                    
+        # 3. Generate a new ID (e.g., CUST-001)                                                                  
+        # We need to pass it a list of dictionaries, not Customer objects,                                       
+        # so we convert self.customers to dicts temporarily just for the ID generator                            
+        customer_dicts = [cust.to_dict() for cust in self.customers]                                             
+        new_id = generate_new_id(customer_dicts, "customer_id", "CUST")                                          
+                                                                                                                    
+        # 4. Create the new Customer object                                                                      
+        new_customer = Customer(                                                                                 
+            customer_id=new_id,                                                                                  
+            username=username,                                                                                   
+            password_hash=password_hash,                                                                         
+            full_name=full_name,                                                                                 
+            email=email,                                                                                         
+            phone=phone,                                                                                         
+            address=address                                                                                      
+        )                                                                                                        
+                                                                                                                    
+        # 5. Save the customer to memory and write to the JSON file                                              
+        self.customers.append(new_customer)                                                                      
+        self.save_customers()                                                                                    
+                                                                                                                    
+        return True, "Registration successful!"
+    
     def validate_login(self, username, password):
-        """
-        TODO:
-        1. Check if username and password match 'admin' or 'staff' (from README).
-        2. If not, check if it matches a customer in self.customers (remember to hash the 
-            input password to compare it with the stored hash!).
-        3. Return the user role or Customer object if successful, else False.
-        """
-        pass
+        """                                                                                                      
+        Validates login credentials.                                                                             
+        Returns the user's role/object if successful, or False if invalid.                                       
+        """                                                                                                      
+        # 1. Check for the hardcoded default accounts first (from README)                                        
+        if username == "admin" and password == "admin123":                                                       
+            return {"role": "ADMIN", "username": "admin"}                                                        
+                                                                                                                    
+        if username == "staff" and password == "staff123":                                                       
+            return {"role": "STAFF", "username": "staff"}                                                        
+                                                                                                                    
+        # 2. If it's not a staff/admin, check the registered customers                                           
+        # Hash the password they typed in so we can compare it to the stored hash                                
+        password_hash = hashlib.sha256(password.encode()).hexdigest()                                            
+
+        for customer in self.customers:
+            if customer.username == username and customer.password_hash == password_hash:
+                # Login successful! Return the customer object and their role
+                return {"role": "CUSTOMER", "customer_data": customer}
+
+        # 3. If no match is found
+        return False
 
     def get_customer_by_id(self, customer_id):
         """
-        TODO:
-        Search self.customers for a matching ID and return the Customer object.
+        Searches the memory for a specific customer.
+        Returns the Customer object if found, or None if not found.
         """
-        pass
+        for customer in self.customers:
+            if customer.customer_id == customer_id:
+                return customer
+
+        return None
