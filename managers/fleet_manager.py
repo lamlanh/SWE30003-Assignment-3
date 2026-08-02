@@ -7,60 +7,49 @@ for subfolder in ("models", "utils"):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from models.vehicle  import Vehicle
-from models.driver   import Driver
-from models.branch   import Branch
-from utils.json_helper  import JsonHelper
+from models.vehicle import Vehicle, STATUS_AVAILABLE, STATUS_ASSIGNED, STATUS_MAINTENANCE
+from models.driver import Driver, STATUS_AVAILABLE as DRV_AVAILABLE, STATUS_ASSIGNED as DRV_ASSIGNED, STATUS_ON_LEAVE
+from utils.json_helper import JsonHelper
 from utils.id_generator import IdGenerator
 
-
-# ---------------------------------------------------------------------------
-# Vehicle and Driver status constants
-# ---------------------------------------------------------------------------
-VEH_AVAILABLE   = "AVAILABLE"
-VEH_ASSIGNED    = "ASSIGNED"
-VEH_MAINTENANCE = "MAINTENANCE"
-
-DRV_AVAILABLE   = "AVAILABLE"
-DRV_ASSIGNED    = "ASSIGNED"
-DRV_ON_LEAVE    = "ON_LEAVE"
+# Default branch — vehicles/drivers are seeded under this branch_id.
+# No separate Branch model: branch_id is just a plain string field.
+DEFAULT_BRANCH_ID = "BRANCH-001"
 
 
 class FleetManager:
     """
     Manages vehicle and driver records for SmartFM.
 
-    Responsibilities (CRC Card 4):
+    Responsibilities (from CRC Card 4):
         - Add, update, or decommission a vehicle record
         - Add, update, or deactivate a driver record
         - Check vehicle availability for a given cargo weight
         - Check driver availability
         - Assign a vehicle and driver to a confirmed order
-        - Flag vehicles under maintenance and exclude from assignments
+        - Flag vehicles under maintenance
 
     Collaborators:
-        - Vehicle    (data-holder)
-        - Driver     (data-holder)
-        - Branch     (data-holder)
-        - JsonHelper (storage)
+        - Vehicle (data-holder)
+        - Driver  (data-holder)
+        - JsonHelper
         - IdGenerator
         - OrderManager
-        - ShipmentManager
+        - ScheduleManager
     """
 
     def __init__(self):
-        """Initialise FleetManager and load all fleet data from JSON."""
-        self._helper     = JsonHelper()
-        self._id_gen     = IdGenerator()
+        """Initialise FleetManager and load data from JSON."""
+        self._helper   = JsonHelper()
+        self._id_gen   = IdGenerator()
 
         # In-memory dictionaries
-        self._vehicles   = {}   # { vehicle_id: Vehicle }
-        self._drivers    = {}   # { driver_id: Driver }
-        self._branches   = {}   # { branch_id: Branch }
+        self._vehicles = {}   # { vehicle_id: Vehicle }
+        self._drivers  = {}   # { driver_id: Driver }
 
         self._load()
 
-        # Seed default data on first run if empty
+        # Seed sample data if empty
         if not self._vehicles and not self._drivers:
             self._seed_default_data()
 
@@ -68,7 +57,7 @@ class FleetManager:
     # Load / Save
     # -----------------------------------------------------------------------
     def _load(self) -> None:
-        """Load all fleet records from JSON files into memory."""
+        """Load all fleet records from JSON into memory."""
         raw_vehicles = self._helper.load("vehicles")
         self._vehicles = {
             vid: Vehicle.from_dict(data)
@@ -81,22 +70,13 @@ class FleetManager:
             for did, data in raw_drivers.items()
         }
 
-        raw_branches = self._helper.load("branches")
-        self._branches = {
-            bid: Branch.from_dict(data)
-            for bid, data in raw_branches.items()
-        }
-
     def save(self) -> None:
-        """Save all fleet records from memory to JSON files."""
+        """Save all fleet records from memory to JSON."""
         self._helper.save("vehicles", {
             vid: v.to_dict() for vid, v in self._vehicles.items()
         })
         self._helper.save("drivers", {
             did: d.to_dict() for did, d in self._drivers.items()
-        })
-        self._helper.save("branches", {
-            bid: b.to_dict() for bid, b in self._branches.items()
         })
 
     # -----------------------------------------------------------------------
@@ -104,33 +84,23 @@ class FleetManager:
     # -----------------------------------------------------------------------
     def _seed_default_data(self) -> None:
         """
-        Seed default branch, vehicles, and drivers on first run.
-        Ensures the system has usable data immediately without manual setup.
+        Seed sample vehicles and drivers on first run.
+        This ensures the system has data to work with immediately.
         """
-        # Default branch
-        branch = Branch(
-            branch_id = "BRANCH-001",
-            name      = "Hanoi Central Branch",
-            address   = "123 Tran Duy Hung, Hanoi, Vietnam",
-            region    = "North",
-            phone     = "024-3456-7890"
-        )
-        self._branches["BRANCH-001"] = branch
-
         # Default vehicles
         vehicles = [
-            Vehicle("VEH-001", "51A-12345", "SMALL",   1000.0,  "BRANCH-001"),
-            Vehicle("VEH-002", "51A-67890", "MEDIUM",  5000.0,  "BRANCH-001"),
-            Vehicle("VEH-003", "51B-11111", "LARGE",   15000.0, "BRANCH-001"),
+            Vehicle("VEH-001", "51A-12345", "SMALL",  1000.0, DEFAULT_BRANCH_ID),
+            Vehicle("VEH-002", "51A-67890", "MEDIUM", 5000.0, DEFAULT_BRANCH_ID),
+            Vehicle("VEH-003", "51B-11111", "LARGE",  15000.0,DEFAULT_BRANCH_ID),
         ]
         for v in vehicles:
             self._vehicles[v.vehicle_id] = v
 
         # Default drivers
         drivers = [
-            Driver("DRV-001", "Nguyen Van An",  "B2-123456", "2028-12-31", "0901234567", "BRANCH-001"),
-            Driver("DRV-002", "Tran Thi Bich",  "B2-654321", "2027-06-30", "0907654321", "BRANCH-001"),
-            Driver("DRV-003", "Le Van Cuong",   "C-789012",  "2029-03-31", "0903456789", "BRANCH-001"),
+            Driver("DRV-001", "Nguyen Van An",  "B2-123456", "2028-12-31", "0901234567", DEFAULT_BRANCH_ID),
+            Driver("DRV-002", "Tran Thi Bich",  "B2-654321", "2027-06-30", "0907654321", DEFAULT_BRANCH_ID),
+            Driver("DRV-003", "Le Van Cuong",   "C-789012",  "2029-03-31", "0903456789", DEFAULT_BRANCH_ID),
         ]
         for d in drivers:
             self._drivers[d.driver_id] = d
@@ -142,24 +112,23 @@ class FleetManager:
     # -----------------------------------------------------------------------
     def add_vehicle(
         self,
-        registration : str,
-        vehicle_type : str,
-        capacity_kg  : float,
-        branch_id    : str
+        registration: str,
+        vehicle_type: str,
+        capacity_kg: float,
+        branch_id: str
     ) -> tuple:
         """
         Add a new vehicle to the fleet.
 
         Args:
-            registration (str)  : Vehicle registration / plate number.
+            registration (str)  : Vehicle registration/plate number.
             vehicle_type (str)  : SMALL, MEDIUM, or LARGE.
-            capacity_kg  (float): Maximum cargo weight in kg.
+            capacity_kg  (float): Max cargo weight in kg.
             branch_id    (str)  : Branch this vehicle belongs to.
 
         Returns:
             tuple: (success: bool, message: str, vehicle: Vehicle or None)
         """
-        # Validate inputs
         if not registration.strip():
             return False, "Registration cannot be empty.", None
 
@@ -169,36 +138,36 @@ class FleetManager:
         if capacity_kg <= 0:
             return False, "Capacity must be greater than 0 kg.", None
 
-        # Check registration uniqueness
-        reg_upper = registration.strip().upper()
-        if any(v.registration == reg_upper for v in self._vehicles.values()):
+        # Check registration is unique
+        if any(v.registration == registration.strip().upper()
+               for v in self._vehicles.values()):
             return False, f"Vehicle '{registration}' already exists.", None
 
         vehicle_id = self._id_gen.next_vehicle_id(self._vehicles)
         vehicle = Vehicle(
             vehicle_id   = vehicle_id,
-            registration = reg_upper,
+            registration = registration.strip().upper(),
             vehicle_type = vehicle_type.upper(),
             capacity_kg  = capacity_kg,
             branch_id    = branch_id
         )
         self._vehicles[vehicle_id] = vehicle
         self.save()
-        return True, f"Vehicle {vehicle_id} ({reg_upper}) added successfully.", vehicle
+        return True, f"Vehicle {vehicle_id} added successfully.", vehicle
 
     def update_vehicle_status(
         self,
-        vehicle_id       : str,
-        new_status       : str,
-        maintenance_note : str = ""
+        vehicle_id: str,
+        new_status: str,
+        maintenance_note: str = ""
     ) -> tuple:
         """
-        Update a vehicle's operational status.
+        Update a vehicle's status.
 
         Args:
             vehicle_id       (str): The vehicle to update.
-            new_status       (str): AVAILABLE or MAINTENANCE.
-            maintenance_note (str): Reason for maintenance (if applicable).
+            new_status       (str): New status (AVAILABLE/ASSIGNED/MAINTENANCE).
+            maintenance_note (str): Reason if under maintenance.
 
         Returns:
             tuple: (success: bool, message: str)
@@ -207,11 +176,9 @@ class FleetManager:
         if not vehicle:
             return False, f"Vehicle {vehicle_id} not found."
 
-        if new_status.upper() not in (VEH_AVAILABLE, VEH_MAINTENANCE):
-            return False, "Status must be AVAILABLE or MAINTENANCE."
-
-        if vehicle.status == VEH_ASSIGNED:
-            return False, f"Cannot update {vehicle_id} — it is currently assigned to a shipment."
+        valid_statuses = (STATUS_AVAILABLE, STATUS_ASSIGNED, STATUS_MAINTENANCE)
+        if new_status.upper() not in valid_statuses:
+            return False, f"Invalid status. Choose: {', '.join(valid_statuses)}."
 
         vehicle.status           = new_status.upper()
         vehicle.maintenance_note = maintenance_note
@@ -231,7 +198,7 @@ class FleetManager:
         if vehicle_id not in self._vehicles:
             return False, f"Vehicle {vehicle_id} not found."
 
-        if self._vehicles[vehicle_id].status == VEH_ASSIGNED:
+        if self._vehicles[vehicle_id].status == STATUS_ASSIGNED:
             return False, "Cannot remove a vehicle that is currently assigned."
 
         del self._vehicles[vehicle_id]
@@ -243,11 +210,11 @@ class FleetManager:
     # -----------------------------------------------------------------------
     def add_driver(
         self,
-        full_name      : str,
-        licence_number : str,
-        licence_expiry : str,
-        phone          : str,
-        branch_id      : str
+        full_name: str,
+        licence_number: str,
+        licence_expiry: str,
+        phone: str,
+        branch_id: str
     ) -> tuple:
         """
         Add a new driver to the fleet.
@@ -256,7 +223,7 @@ class FleetManager:
             full_name      (str): Driver's full name.
             licence_number (str): Driver's licence number.
             licence_expiry (str): Licence expiry date (YYYY-MM-DD).
-            phone          (str): Driver's contact phone number.
+            phone          (str): Driver's contact phone.
             branch_id      (str): Branch this driver belongs to.
 
         Returns:
@@ -276,10 +243,10 @@ class FleetManager:
         except ValueError:
             return False, "Licence expiry must be in YYYY-MM-DD format.", None
 
-        # Check licence uniqueness
+        # Check licence number is unique
         if any(d.licence_number == licence_number.strip()
                for d in self._drivers.values()):
-            return False, f"Licence '{licence_number}' already registered.", None
+            return False, f"Licence number '{licence_number}' already exists.", None
 
         driver_id = self._id_gen.next_driver_id(self._drivers)
         driver = Driver(
@@ -292,21 +259,21 @@ class FleetManager:
         )
         self._drivers[driver_id] = driver
         self.save()
-        return True, f"Driver {driver_id} ({full_name}) added successfully.", driver
+        return True, f"Driver {driver_id} added successfully.", driver
 
     def update_driver_status(
         self,
-        driver_id  : str,
-        new_status : str,
-        leave_note : str = ""
+        driver_id: str,
+        new_status: str,
+        leave_note: str = ""
     ) -> tuple:
         """
-        Update a driver's operational status.
+        Update a driver's status.
 
         Args:
             driver_id  (str): The driver to update.
-            new_status (str): AVAILABLE or ON_LEAVE.
-            leave_note (str): Reason for leave (if applicable).
+            new_status (str): New status (AVAILABLE/ASSIGNED/ON_LEAVE).
+            leave_note (str): Reason for leave if ON_LEAVE.
 
         Returns:
             tuple: (success: bool, message: str)
@@ -315,11 +282,9 @@ class FleetManager:
         if not driver:
             return False, f"Driver {driver_id} not found."
 
-        if new_status.upper() not in (DRV_AVAILABLE, DRV_ON_LEAVE):
-            return False, "Status must be AVAILABLE or ON_LEAVE."
-
-        if driver.status == DRV_ASSIGNED:
-            return False, f"Cannot update {driver_id} — currently assigned to a shipment."
+        valid = (DRV_AVAILABLE, DRV_ASSIGNED, STATUS_ON_LEAVE)
+        if new_status.upper() not in valid:
+            return False, f"Invalid status. Choose: {', '.join(valid)}."
 
         driver.status     = new_status.upper()
         driver.leave_note = leave_note
@@ -351,46 +316,38 @@ class FleetManager:
     # -----------------------------------------------------------------------
     def get_available_vehicles(self, cargo_weight_kg: float = 0) -> list:
         """
-        Return available vehicles that can carry the given cargo weight.
-
-        Excludes vehicles that are ASSIGNED or MAINTENANCE.
-        Validates that vehicle capacity is sufficient for the cargo.
+        Return a list of available vehicles that can carry the cargo weight.
 
         Args:
-            cargo_weight_kg (float): Required cargo weight (0 = any weight).
+            cargo_weight_kg (float): Required cargo weight in kg (0 = any).
 
         Returns:
-            list: Available Vehicle objects sorted by capacity.
+            list: List of available Vehicle objects sorted by capacity.
         """
         available = [
             v for v in self._vehicles.values()
-            if v.status == VEH_AVAILABLE and v.capacity_kg >= cargo_weight_kg
+            if v.is_available() and v.can_carry(cargo_weight_kg)
         ]
         return sorted(available, key=lambda v: v.capacity_kg)
 
     def get_available_drivers(self) -> list:
         """
-        Return available drivers with valid (non-expired) licences.
-
-        Excludes drivers that are ASSIGNED or ON_LEAVE.
-        Also excludes drivers with expired licences.
+        Return a list of available drivers with valid licences.
 
         Returns:
-            list: Available Driver objects sorted by name.
+            list: List of available Driver objects.
         """
-        available = [
+        return [
             d for d in self._drivers.values()
-            if d.status == DRV_AVAILABLE and d.is_licence_valid()
+            if d.is_available() and d.is_licence_valid()
         ]
-        return sorted(available, key=lambda d: d.full_name)
 
     # -----------------------------------------------------------------------
-    # Assignment helpers (called by OrderManager)
+    # Assignment
     # -----------------------------------------------------------------------
     def assign_vehicle(self, vehicle_id: str) -> tuple:
         """
         Mark a vehicle as ASSIGNED.
-        Called by OrderManager when an order is confirmed.
 
         Args:
             vehicle_id (str): The vehicle to assign.
@@ -401,17 +358,16 @@ class FleetManager:
         vehicle = self._vehicles.get(vehicle_id)
         if not vehicle:
             return False, f"Vehicle {vehicle_id} not found."
-        if vehicle.status != VEH_AVAILABLE:
-            return False, f"Vehicle {vehicle_id} is not available ({vehicle.status})."
+        if not vehicle.is_available():
+            return False, f"Vehicle {vehicle_id} is not available."
 
-        vehicle.status = VEH_ASSIGNED
+        vehicle.status = STATUS_ASSIGNED
         self.save()
         return True, f"Vehicle {vehicle_id} assigned."
 
     def assign_driver(self, driver_id: str) -> tuple:
         """
         Mark a driver as ASSIGNED.
-        Called by OrderManager when an order is confirmed.
 
         Args:
             driver_id (str): The driver to assign.
@@ -422,36 +378,24 @@ class FleetManager:
         driver = self._drivers.get(driver_id)
         if not driver:
             return False, f"Driver {driver_id} not found."
-        if driver.status != DRV_AVAILABLE:
-            return False, f"Driver {driver_id} is not available ({driver.status})."
+        if not driver.is_available():
+            return False, f"Driver {driver_id} is not available."
 
         driver.status = DRV_ASSIGNED
         self.save()
         return True, f"Driver {driver_id} assigned."
 
     def release_vehicle(self, vehicle_id: str) -> None:
-        """
-        Release a vehicle back to AVAILABLE.
-        Called when an order is cancelled or completed.
-
-        Args:
-            vehicle_id (str): The vehicle to release.
-        """
+        """Release a vehicle back to AVAILABLE status."""
         vehicle = self._vehicles.get(vehicle_id)
-        if vehicle and vehicle.status == VEH_ASSIGNED:
-            vehicle.status = VEH_AVAILABLE
+        if vehicle:
+            vehicle.status = STATUS_AVAILABLE
             self.save()
 
     def release_driver(self, driver_id: str) -> None:
-        """
-        Release a driver back to AVAILABLE.
-        Called when an order is cancelled or completed.
-
-        Args:
-            driver_id (str): The driver to release.
-        """
+        """Release a driver back to AVAILABLE status."""
         driver = self._drivers.get(driver_id)
-        if driver and driver.status == DRV_ASSIGNED:
+        if driver:
             driver.status = DRV_AVAILABLE
             self.save()
 
@@ -467,40 +411,16 @@ class FleetManager:
         return self._drivers.get(driver_id)
 
     def get_all_vehicles(self) -> list:
-        """Return all vehicles sorted by ID."""
-        return sorted(self._vehicles.values(), key=lambda v: v.vehicle_id)
+        """Return all vehicles."""
+        return list(self._vehicles.values())
 
     def get_all_drivers(self) -> list:
-        """Return all drivers sorted by name."""
-        return sorted(self._drivers.values(), key=lambda d: d.full_name)
-
-    def get_all_branches(self) -> list:
-        """Return all branches."""
-        return list(self._branches.values())
+        """Return all drivers."""
+        return list(self._drivers.values())
 
     def get_default_branch_id(self) -> str:
-        """Return the first available branch ID."""
-        if self._branches:
-            return list(self._branches.keys())[0]
-        return "BRANCH-001"
-
-    def get_fleet_summary(self) -> dict:
-        """
-        Return a summary of fleet statistics.
-
-        Returns:
-            dict: Counts of vehicles and drivers by status.
-        """
-        return {
-            "total_vehicles"      : len(self._vehicles),
-            "available_vehicles"  : sum(1 for v in self._vehicles.values() if v.status == VEH_AVAILABLE),
-            "assigned_vehicles"   : sum(1 for v in self._vehicles.values() if v.status == VEH_ASSIGNED),
-            "maintenance_vehicles": sum(1 for v in self._vehicles.values() if v.status == VEH_MAINTENANCE),
-            "total_drivers"       : len(self._drivers),
-            "available_drivers"   : sum(1 for d in self._drivers.values() if d.status == DRV_AVAILABLE),
-            "assigned_drivers"    : sum(1 for d in self._drivers.values() if d.status == DRV_ASSIGNED),
-            "on_leave_drivers"    : sum(1 for d in self._drivers.values() if d.status == DRV_ON_LEAVE),
-        }
+        """Return the default branch ID."""
+        return DEFAULT_BRANCH_ID
 
     def __repr__(self) -> str:
         return (
