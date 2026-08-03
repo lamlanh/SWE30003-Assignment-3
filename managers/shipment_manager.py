@@ -9,8 +9,8 @@ for subfolder in ("models", "utils"):
         sys.path.insert(0, path)
 
 from models.shipment    import Shipment
-from utils.json_helper  import JsonHelper
-from utils.id_generator import IdGenerator
+from utils.json_helper  import load_data, save_data
+from utils.id_generator import generate_new_id
 
 
 # ---------------------------------------------------------------------------
@@ -36,14 +36,12 @@ class ShipmentManager:
         - Shipment   (data-holder)
         - FleetManager
         - OrderManager
-        - JsonHelper
-        - IdGenerator
+        - json_helper (load_data / save_data)
+        - id_generator (generate_new_id)
     """
 
     def __init__(self):
         """Initialise ShipmentManager and load shipment records from JSON."""
-        self._helper    = JsonHelper()
-        self._id_gen    = IdGenerator()
         self._shipments = {}   # { shipment_id: Shipment }
         self._load()
 
@@ -52,17 +50,15 @@ class ShipmentManager:
     # -----------------------------------------------------------------------
     def _load(self) -> None:
         """Load all shipment records from JSON into memory."""
-        raw = self._helper.load("shipments")
+        raw = load_data("shipments.json")   # list of dicts
         self._shipments = {
-            sid: Shipment.from_dict(data)
-            for sid, data in raw.items()
+            s["shipment_id"]: Shipment.from_dict(s)
+            for s in raw
         }
 
     def save(self) -> None:
         """Save all shipment records from memory to JSON."""
-        self._helper.save("shipments", {
-            sid: s.to_dict() for sid, s in self._shipments.items()
-        })
+        save_data("shipments.json", [s.to_dict() for s in self._shipments.values()])
 
     # -----------------------------------------------------------------------
     # Create shipment
@@ -97,7 +93,9 @@ class ShipmentManager:
                 None
             )
 
-        shipment_id = self._id_gen.next_shipment_id(self._shipments)
+        shipment_id = generate_new_id(
+            [s.to_dict() for s in self._shipments.values()], "shipment_id", "SHIP"
+        )
         shipment = Shipment(
             shipment_id = shipment_id,
             order_id    = order_id,

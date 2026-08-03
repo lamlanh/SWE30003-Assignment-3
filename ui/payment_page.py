@@ -117,7 +117,7 @@ def render(system) -> None:
             # Only orders without an invoice yet are eligible
             eligible_orders = [
                 o for o in order_manager.list_orders()
-                if o.status in ("PENDING", "CONFIRMED") and not o.invoice_id
+                if o.status in ("PENDING", "CONFIRMED") and not getattr(o, "invoice_id", None)
             ]
 
             if not eligible_orders:
