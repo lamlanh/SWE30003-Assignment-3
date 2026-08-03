@@ -1,0 +1,12 @@
+[
+    {
+        "customer_id": "CUST-001",
+        "username": "Tran Lam",
+        "password_hash": "9355d502f0368aa08681ace906499bbad445fbf827ad00e789266e495a639249",
+        "full_name": "Tran Phuc Lam",
+        "email": "lamlanh221005@gmail.com",
+        "phone": "0987654321",
+        "address": "36 Hoan Kiem Street",
+        "registered_date": "2026-08-03T12:09:11.813702"
+    }
+]

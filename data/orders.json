@@ -1,0 +1,15 @@
+[
+    {
+        "order_id": "ORD-001",
+        "customer_id": "CUST-001",
+        "cargo_description": "20 boxes of frozen seafood",
+        "cargo_weight_kg": 450.0,
+        "pickup_address": "123 Le Loi Street, District 1, Ho Chi Minh City",
+        "delivery_address": "45 Tran Phu Street, Hai Chau, Da Nang",
+        "preferred_date": "2026-08-03",
+        "status": "PENDING",
+        "vehicle_id": null,
+        "driver_id": null,
+        "created_date": "2026-08-03T11:43:26.058695"
+    }
+]

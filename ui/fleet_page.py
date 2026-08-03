@@ -10,8 +10,9 @@ def render(system) -> None:
         system: The initialised SmartFMSystem instance.
     """
     # Access control — staff and admin only
-    role = st.session_state.get("role", "")
-    if not st.session_state.get("logged_in") or role not in ("STAFF", "ADMIN"):
+    current_user = st.session_state.get("current_user")
+    role = current_user.get("role", "") if current_user else ""
+    if not current_user or role not in ("STAFF", "ADMIN"):
         st.error("🔒 Access denied. This page is for Staff and Admin only.")
         st.info("Please log in with a staff account from the Customer Account page.")
         return
@@ -90,21 +91,6 @@ def _render_overview(fleet) -> None:
     col6.metric("✅ Available", summary["available_drivers"])
     col7.metric("🔵 Assigned",  summary["assigned_drivers"])
     col8.metric("🟡 On Leave",  summary["on_leave_drivers"])
-
-    st.divider()
-
-    # Branch info
-    branches = fleet.get_all_branches()
-    if branches:
-        st.markdown("#### 🏢 Branches")
-        for b in branches:
-            st.markdown(
-                f"<div style='background:#1e2130;padding:12px;border-radius:8px;"
-                f"border:1px solid #2d3147;margin:4px 0'>"
-                f"<b>{b.name}</b> ({b.branch_id}) — {b.region}<br>"
-                f"📍 {b.address} | ☎️ {b.phone}</div>",
-                unsafe_allow_html=True
-            )
 
 
 # ---------------------------------------------------------------------------
@@ -398,7 +384,7 @@ def _render_dispatch(fleet, shipment, orders) -> None:
     )
 
     # Get pending orders
-    pending = orders.get_pending_orders()
+    pending = [o for o in orders.list_orders() if o.status == "PENDING"]
 
     if not pending:
         st.info("✅ No pending orders at this time. All orders have been dispatched.")
@@ -420,7 +406,7 @@ def _render_dispatch(fleet, shipment, orders) -> None:
 
         # Get selected order details
         selected_order_id = order_options[selected_order_label]
-        selected_order    = orders.get_order(selected_order_id)
+        selected_order    = orders.get_order_by_id(selected_order_id)
 
         if selected_order:
             st.markdown(
@@ -501,25 +487,36 @@ def _render_dispatch(fleet, shipment, orders) -> None:
             elif not driver_id:
                 st.error("❌ Please select a valid driver.")
             else:
-                # Get customer name for notification
-                from managers.account_manager import AccountManager
-                acct = AccountManager()
-                customer = acct.get_by_id(selected_order.customer_id)
-                customer_name = customer.full_name if customer else selected_order.customer_id
-
-                # Assign vehicle and driver via OrderManager
-                success, message = orders.assign_vehicle_and_driver(
-                    order_id      = selected_order_id,
-                    vehicle_id    = vehicle_id,
-                    driver_id     = driver_id,
-                    customer_name = customer_name
-                )
-                if success:
-                    st.success(f"✅ {message}")
-                    st.balloons()
-                    st.rerun()
+                # Assign vehicle and driver, create the shipment record,
+                # and confirm the order — composed from the real manager
+                # methods (there's no single "assign_vehicle_and_driver"
+                # call on OrderManager).
+                fleet_ok, fleet_msg = fleet.assign_vehicle(vehicle_id)
+                if not fleet_ok:
+                    st.error(f"❌ {fleet_msg}")
                 else:
-                    st.error(f"❌ {message}")
+                    driver_ok, driver_msg = fleet.assign_driver(driver_id)
+                    if not driver_ok:
+                        fleet.release_vehicle(vehicle_id)
+                        st.error(f"❌ {driver_msg}")
+                    else:
+                        ship_ok, ship_msg, _ = shipment.create_shipment(
+                            order_id   = selected_order_id,
+                            vehicle_id = vehicle_id,
+                            driver_id  = driver_id
+                        )
+                        if not ship_ok:
+                            fleet.release_vehicle(vehicle_id)
+                            fleet.release_driver(driver_id)
+                            st.error(f"❌ {ship_msg}")
+                        else:
+                            try:
+                                orders.update_order_status(selected_order_id, "CONFIRMED")
+                                st.success(f"✅ {ship_msg}")
+                                st.balloons()
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Shipment created but order could not be confirmed: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -549,7 +546,7 @@ def _render_tracking(shipment, fleet, orders) -> None:
     st.markdown(f"**{len(filtered)} shipment(s) found**")
 
     for s in filtered:
-        order  = orders.get_order(s.order_id)
+        order  = orders.get_order_by_id(s.order_id)
         vehicle = fleet.get_vehicle(s.vehicle_id)
         driver  = fleet.get_driver(s.driver_id)
 

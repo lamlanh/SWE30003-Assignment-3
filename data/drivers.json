@@ -1,0 +1,32 @@
+[
+    {
+        "driver_id": "DRV-001",
+        "full_name": "Nguyen Van An",
+        "licence_number": "B2-123456",
+        "licence_expiry": "2028-12-31",
+        "phone": "0901234567",
+        "branch_id": "BRANCH-001",
+        "status": "AVAILABLE",
+        "leave_note": ""
+    },
+    {
+        "driver_id": "DRV-002",
+        "full_name": "Tran Thi Bich",
+        "licence_number": "B2-654321",
+        "licence_expiry": "2027-06-30",
+        "phone": "0907654321",
+        "branch_id": "BRANCH-001",
+        "status": "AVAILABLE",
+        "leave_note": ""
+    },
+    {
+        "driver_id": "DRV-003",
+        "full_name": "Le Van Cuong",
+        "licence_number": "C-789012",
+        "licence_expiry": "2029-03-31",
+        "phone": "0903456789",
+        "branch_id": "BRANCH-001",
+        "status": "AVAILABLE",
+        "leave_note": ""
+    }
+]

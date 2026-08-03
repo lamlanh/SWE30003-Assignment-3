@@ -9,8 +9,8 @@ for subfolder in ("models", "utils"):
 
 from models.vehicle import Vehicle, STATUS_AVAILABLE, STATUS_ASSIGNED, STATUS_MAINTENANCE
 from models.driver import Driver, STATUS_AVAILABLE as DRV_AVAILABLE, STATUS_ASSIGNED as DRV_ASSIGNED, STATUS_ON_LEAVE
-from utils.json_helper import JsonHelper
-from utils.id_generator import IdGenerator
+from utils.json_helper import load_data, save_data
+from utils.id_generator import generate_new_id
 
 # Default branch — vehicles/drivers are seeded under this branch_id.
 # No separate Branch model: branch_id is just a plain string field.
@@ -32,17 +32,14 @@ class FleetManager:
     Collaborators:
         - Vehicle (data-holder)
         - Driver  (data-holder)
-        - JsonHelper
-        - IdGenerator
+        - json_helper (load_data / save_data)
+        - id_generator (generate_new_id)
         - OrderManager
         - ScheduleManager
     """
 
     def __init__(self):
         """Initialise FleetManager and load data from JSON."""
-        self._helper   = JsonHelper()
-        self._id_gen   = IdGenerator()
-
         # In-memory dictionaries
         self._vehicles = {}   # { vehicle_id: Vehicle }
         self._drivers  = {}   # { driver_id: Driver }
@@ -58,26 +55,22 @@ class FleetManager:
     # -----------------------------------------------------------------------
     def _load(self) -> None:
         """Load all fleet records from JSON into memory."""
-        raw_vehicles = self._helper.load("vehicles")
+        raw_vehicles = load_data("vehicles.json")   # list of dicts
         self._vehicles = {
-            vid: Vehicle.from_dict(data)
-            for vid, data in raw_vehicles.items()
+            v["vehicle_id"]: Vehicle.from_dict(v)
+            for v in raw_vehicles
         }
 
-        raw_drivers = self._helper.load("drivers")
+        raw_drivers = load_data("drivers.json")   # list of dicts
         self._drivers = {
-            did: Driver.from_dict(data)
-            for did, data in raw_drivers.items()
+            d["driver_id"]: Driver.from_dict(d)
+            for d in raw_drivers
         }
 
     def save(self) -> None:
         """Save all fleet records from memory to JSON."""
-        self._helper.save("vehicles", {
-            vid: v.to_dict() for vid, v in self._vehicles.items()
-        })
-        self._helper.save("drivers", {
-            did: d.to_dict() for did, d in self._drivers.items()
-        })
+        save_data("vehicles.json", [v.to_dict() for v in self._vehicles.values()])
+        save_data("drivers.json", [d.to_dict() for d in self._drivers.values()])
 
     # -----------------------------------------------------------------------
     # Default seed data
@@ -143,7 +136,9 @@ class FleetManager:
                for v in self._vehicles.values()):
             return False, f"Vehicle '{registration}' already exists.", None
 
-        vehicle_id = self._id_gen.next_vehicle_id(self._vehicles)
+        vehicle_id = generate_new_id(
+            [v.to_dict() for v in self._vehicles.values()], "vehicle_id", "VEH"
+        )
         vehicle = Vehicle(
             vehicle_id   = vehicle_id,
             registration = registration.strip().upper(),
@@ -248,7 +243,9 @@ class FleetManager:
                for d in self._drivers.values()):
             return False, f"Licence number '{licence_number}' already exists.", None
 
-        driver_id = self._id_gen.next_driver_id(self._drivers)
+        driver_id = generate_new_id(
+            [d.to_dict() for d in self._drivers.values()], "driver_id", "DRV"
+        )
         driver = Driver(
             driver_id      = driver_id,
             full_name      = full_name.strip(),
@@ -421,6 +418,24 @@ class FleetManager:
     def get_default_branch_id(self) -> str:
         """Return the default branch ID."""
         return DEFAULT_BRANCH_ID
+
+    def get_fleet_summary(self) -> dict:
+        """
+        Return summary counts of vehicles and drivers by status,
+        for the Fleet Dispatch Overview tab.
+        """
+        vehicles = list(self._vehicles.values())
+        drivers  = list(self._drivers.values())
+        return {
+            "total_vehicles":       len(vehicles),
+            "available_vehicles":   sum(1 for v in vehicles if v.status == STATUS_AVAILABLE),
+            "assigned_vehicles":    sum(1 for v in vehicles if v.status == STATUS_ASSIGNED),
+            "maintenance_vehicles": sum(1 for v in vehicles if v.status == STATUS_MAINTENANCE),
+            "total_drivers":        len(drivers),
+            "available_drivers":    sum(1 for d in drivers if d.status == DRV_AVAILABLE),
+            "assigned_drivers":     sum(1 for d in drivers if d.status == DRV_ASSIGNED),
+            "on_leave_drivers":     sum(1 for d in drivers if d.status == STATUS_ON_LEAVE),
+        }
 
     def __repr__(self) -> str:
         return (

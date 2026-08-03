@@ -80,10 +80,7 @@ def bootstrap_system():
     """
     if "smartfm_system" not in st.session_state:
         from managers.smartfm_system import SmartFMSystem
-        system = SmartFMSystem()
-        if not system.is_initialised:
-            system.initialise()
-        st.session_state["smartfm_system"] = system
+        st.session_state["smartfm_system"] = SmartFMSystem()
 
     return st.session_state["smartfm_system"]
 
@@ -108,30 +105,29 @@ def render_sidebar(system) -> str:
         st.divider()
 
         # System status
-        if system.is_initialised:
-            st.success("System Online")
-        else:
-            st.error("System Offline")
+        st.success("✅ System Online")
 
         st.divider()
 
         # Login status and logout button
-        if st.session_state.get("logged_in"):
-            username  = st.session_state.get("username", "")
-            role      = st.session_state.get("role", "CUSTOMER")
-            full_name = st.session_state.get("full_name", "")
-            st.markdown(f"**👤 {full_name}**")
-            st.markdown(f"*{username} — {role}*")
+        current_user = st.session_state.get("current_user")
+        role = current_user.get("role", "") if current_user else ""
+
+        if current_user:
+            if role == "CUSTOMER":
+                display_name = current_user["customer_data"].full_name
+            else:
+                display_name = current_user.get("username", "")
+            st.markdown(f"**👤 {display_name}**")
+            st.markdown(f"*{role}*")
             if st.button("🚪 Logout", use_container_width=True):
-                for key in ["logged_in", "username", "role", "full_name", "user_id"]:
-                    st.session_state.pop(key, None)
+                st.session_state.current_user = None
                 st.session_state["selected_page"] = "🏠  Home"
                 st.rerun()
             st.divider()
 
         # Build navigation pages based on role
-        role = st.session_state.get("role", "")
-        if not st.session_state.get("logged_in"):
+        if not current_user:
             pages = ["🏠  Home", "👤  Customer Account Management"]
         elif role == "CUSTOMER":
             pages = [
@@ -143,8 +139,6 @@ def render_sidebar(system) -> str:
         else:
             pages = [
                 "🏠  Home",
-                "👤  Customer Account Management",
-                "📦  Place Shipment Order",
                 "🚛  Fleet Dispatch",
                 "💳  Process Payment & Receipt",
                 "🔍  Data Inspector",
@@ -210,16 +204,20 @@ def render_home() -> None:
 
     st.divider()
 
-    if not st.session_state.get("logged_in"):
+    if not st.session_state.get("current_user"):
         st.info(
             "👋 Welcome! Please go to **Customer Account Management** "
             "in the sidebar to register or log in."
         )
     else:
-        full_name = st.session_state.get("full_name", "")
-        role      = st.session_state.get("role", "CUSTOMER")
+        current_user = st.session_state["current_user"]
+        role = current_user.get("role", "")
+        if role == "CUSTOMER":
+            display_name = current_user["customer_data"].full_name
+        else:
+            display_name = current_user.get("username", "")
         st.success(
-            f"✅ Welcome back, **{full_name}**! "
+            f"✅ Welcome back, **{display_name}**! "
             f"You are logged in as **{role}**. "
             "Use the sidebar to navigate."
         )
