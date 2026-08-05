@@ -1,6 +1,6 @@
 # SmartFM - Smart Fleet Management System (SWE30003)
 
-Thís is the SmartFM application for Assignment 3 from Group HN13! We have created automated setup scripts to make launching the app as simple as possible.
+This is the SmartFM application for Assignment 3 from Group HN13! We have created automated setup scripts to make launching the app as simple as possible.
 
 ## How to Run the App
 
