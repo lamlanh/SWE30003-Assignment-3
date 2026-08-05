@@ -24,11 +24,23 @@ We have provided a shell script for quick deployment.
 ### Manual Setup (Fallback)
 If you prefer not to use the automated scripts, or if you encounter any issues, you can run the application manually from your terminal:
 
-1. **Install dependencies:**
+1. **Setup virtual environment**
+   ```bash
+   python -m venv .venv 
+   ```
+2. **Activate virtual environment**
+   ```bash
+   # For Linux/macOS:
+   source .venv/bin/activate 
+       
+   # For Windows:
+   .venv\Scripts\activate 
+   ```
+3. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
-2. **Launch the application:**
+4. **Launch the application:**
    ```bash
    streamlit run app.py
    ```
