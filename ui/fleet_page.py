@@ -384,7 +384,11 @@ def _render_dispatch(fleet, shipment, orders) -> None:
     )
 
     # Get pending orders
-    pending = [o for o in orders.list_orders() if o.status == "PENDING"]
+    dispatched_order_ids = {s.order_id for s in shipment.get_all_shipments()}         
+    pending = [
+        o for o in orders.list_orders() 
+        if o.status in ("PENDING", "CONFIRMED") and o.order_id not in dispatched_order_ids
+    ]
 
     if not pending:
         st.info("✅ No pending orders at this time. All orders have been dispatched.")

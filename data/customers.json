@@ -8,5 +8,15 @@
         "phone": "0987654321",
         "address": "36 Hoan Kiem Street",
         "registered_date": "2026-08-03T12:09:11.813702"
+    },
+    {
+        "customer_id": "CUST-002",
+        "username": "customer",
+        "password_hash": "547326ca8523be878ba253368501078051bcf5687893ebd20d5d418f0c67da2c",
+        "full_name": "customer",
+        "email": "customer@email.com",
+        "phone": "12345",
+        "address": "test",
+        "registered_date": "2026-08-05T14:05:22.854257"
     }
 ]
